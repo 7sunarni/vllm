@@ -266,6 +266,14 @@ ENV UV_INDEX_STRATEGY="unsafe-best-match"
 # Use copy mode to avoid hardlink failures with Docker cache mounts
 ENV UV_LINK_MODE=copy
 
+RUN cat > /etc/apt/sources.list << eof
+# 22.04
+deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy main restricted universe multiverse
+deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-updates main restricted universe multiverse
+deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-backports main restricted universe multiverse
+deb http://security.ubuntu.com/ubuntu/ jammy-security main restricted universe multiverse
+eof
+
 # Install libnuma-dev, required by fastsafetensors (fixes #20384)
 RUN apt-get update && apt-get install -y libnuma-dev && rm -rf /var/lib/apt/lists/*
 COPY requirements/lint.txt requirements/lint.txt
@@ -298,6 +306,14 @@ ARG GET_PIP_URL
 
 RUN PYTHON_VERSION_STR=$(echo ${PYTHON_VERSION} | sed 's/\.//g') && \
     echo "export PYTHON_VERSION_STR=${PYTHON_VERSION_STR}" >> /etc/environment
+    
+RUN cat > /etc/apt/sources.list << eof
+# 22.04
+deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy main restricted universe multiverse
+deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-updates main restricted universe multiverse
+deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-backports main restricted universe multiverse
+deb http://security.ubuntu.com/ubuntu/ jammy-security main restricted universe multiverse
+eof
 
 # Install Python and other dependencies
 RUN echo 'tzdata tzdata/Areas select America' | debconf-set-selections \
