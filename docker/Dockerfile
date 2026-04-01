@@ -97,6 +97,18 @@ ARG PYTHON_VERSION
 
 ENV DEBIAN_FRONTEND=noninteractive
 
+ENV UV_PYTHON_INSTALL_MIRROR=https://ghfast.top/https://github.com/astral-sh/python-build-standalone/releases/download
+ENV UV_INSTALLER_GITHUB_BASE_URL=https://ghfast.top/https://github.com
+ENV UV_DEFAULT_INDEX=https://pypi.tuna.tsinghua.edu.cn/simple
+
+RUN cat > /etc/apt/sources.list << eof
+# 22.04
+deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy main restricted universe multiverse
+deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-updates main restricted universe multiverse
+deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-backports main restricted universe multiverse
+deb http://security.ubuntu.com/ubuntu/ jammy-security main restricted universe multiverse
+eof
+
 # Install system dependencies including build tools
 RUN apt-get update -y \
     && apt-get install -y --no-install-recommends \
@@ -117,7 +129,7 @@ RUN apt-get update -y \
     # Ubuntu 20.04/22.04 where python3.x-dev is not available without a PPA)
     && (apt-get install -y --no-install-recommends python${PYTHON_VERSION}-dev 2>/dev/null || true) \
     && rm -rf /var/lib/apt/lists/* \
-    && curl -LsSf https://astral.sh/uv/install.sh | sh \
+    && curl -LsSf https://ghfast.top/https://github.com/astral-sh/uv/releases/download/$UV_VERSION/uv-installer.sh | sh \
     && $HOME/.local/bin/uv venv /opt/venv --python ${PYTHON_VERSION} \
     && rm -f /usr/bin/python3 /usr/bin/python3-config /usr/bin/pip \
     && ln -s /opt/venv/bin/python3 /usr/bin/python3 \
@@ -165,14 +177,14 @@ COPY pyproject.toml pyproject.toml
 RUN --mount=type=cache,target=/root/.cache/uv \
     if [ "${PYTORCH_NIGHTLY}" = "1" ]; then \
         echo "Installing torch nightly..." \
-        && uv pip install --python /opt/venv/bin/python3 torch torchaudio torchvision --pre \
+        && uv pip install -i https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple --python /opt/venv/bin/python3 torch torchaudio torchvision --pre \
         --index-url ${PYTORCH_CUDA_INDEX_BASE_URL}/nightly/cu$(echo $CUDA_VERSION | cut -d. -f1,2 | tr -d '.') \
         && echo "Installing other requirements..." \
         && /opt/venv/bin/python3 use_existing_torch.py --prefix \
-        && uv pip install --python /opt/venv/bin/python3 -r requirements/cuda.txt \
+        && uv pip install -i https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple --python /opt/venv/bin/python3 -r requirements/cuda.txt \
         --extra-index-url ${PYTORCH_CUDA_INDEX_BASE_URL}/nightly/cu$(echo $CUDA_VERSION | cut -d. -f1,2 | tr -d '.'); \
     else \
-        uv pip install --python /opt/venv/bin/python3 -r requirements/cuda.txt \
+        uv pip install -i https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple --python /opt/venv/bin/python3 -r requirements/cuda.txt \
         --extra-index-url ${PYTORCH_CUDA_INDEX_BASE_URL}/cu$(echo $CUDA_VERSION | cut -d. -f1,2 | tr -d '.'); \
     fi
 
@@ -256,6 +268,9 @@ ARG VLLM_USE_PRECOMPILED=""
 ARG VLLM_MERGE_BASE_COMMIT=""
 ARG VLLM_MAIN_CUDA_VERSION=""
 
+RUN git config --global --add url.https://ghfast.top/https://github.com.insteadOf https://github.com
+RUN cat ~/.gitconfig && echo "1"
+
 # Use dummy version for csrc-build wheel (only .so files are extracted, version doesn't matter)
 ENV SETUPTOOLS_SCM_PRETEND_VERSION="0.0.0+csrc.build"
 
@@ -277,7 +292,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
           linux/amd64) SCCACHE_ARCH="x86_64" ;; \
           *) echo "Unsupported TARGETPLATFORM for sccache: ${TARGETPLATFORM}" >&2; exit 1 ;; \
         esac \
-        && export SCCACHE_DOWNLOAD_URL="${SCCACHE_DOWNLOAD_URL:-https://github.com/mozilla/sccache/releases/download/v0.8.1/sccache-v0.8.1-${SCCACHE_ARCH}-unknown-linux-musl.tar.gz}" \
+        && export SCCACHE_DOWNLOAD_URL="${SCCACHE_DOWNLOAD_URL:-https://ghfast.top/https://github.com/mozilla/sccache/releases/download/v0.8.1/sccache-v0.8.1-${SCCACHE_ARCH}-unknown-linux-musl.tar.gz}" \
         && curl -L -o sccache.tar.gz ${SCCACHE_DOWNLOAD_URL} \
         && tar -xzf sccache.tar.gz \
         && sudo mv sccache-v0.8.1-${SCCACHE_ARCH}-unknown-linux-musl/sccache /usr/bin/sccache \
@@ -457,6 +472,16 @@ ENV UV_INDEX_STRATEGY="unsafe-best-match"
 # Use copy mode to avoid hardlink failures with Docker cache mounts
 ENV UV_LINK_MODE=copy
 
+RUN cat > /etc/apt/sources.list << eof
+# 22.04
+deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy main restricted universe multiverse
+deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-updates main restricted universe multiverse
+deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-backports main restricted universe multiverse
+deb http://security.ubuntu.com/ubuntu/ jammy-security main restricted universe multiverse
+eof
+
+
+
 # Install libnuma-dev, required by fastsafetensors (fixes #20384)
 RUN apt-get update && apt-get install -y --no-install-recommends libnuma-dev && rm -rf /var/lib/apt/lists/*
 
@@ -500,6 +525,15 @@ ARG GET_PIP_URL
 
 ENV DEBIAN_FRONTEND=noninteractive
 WORKDIR /vllm-workspace
+    
+RUN cat > /etc/apt/sources.list << eof
+# 22.04
+deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy main restricted universe multiverse
+deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-updates main restricted universe multiverse
+deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-backports main restricted universe multiverse
+deb http://security.ubuntu.com/ubuntu/ jammy-security main restricted universe multiverse
+eof
+
 
 
 # Python version string for paths (e.g., "312" for 3.12)
@@ -560,7 +594,7 @@ RUN CUDA_VERSION_DASH=$(echo $CUDA_VERSION | cut -d. -f1,2 | tr '.' '-') && \
     rm -rf /var/lib/apt/lists/*
 
 # Install uv for faster pip installs
-RUN python3 -m pip install uv
+RUN python3 -m pip -i https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple install uv
 
 # Environment for uv
 ENV UV_HTTP_TIMEOUT=500
@@ -593,8 +627,8 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # From versions.json: .flashinfer.version
 ARG FLASHINFER_VERSION=0.6.6
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv pip install --system flashinfer-cubin==${FLASHINFER_VERSION} \
-    && uv pip install --system flashinfer-jit-cache==${FLASHINFER_VERSION} \
+    uv pip install -i https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple --system flashinfer-cubin==${FLASHINFER_VERSION} \
+    && uv pip install -i https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple --system flashinfer-jit-cache==${FLASHINFER_VERSION} \
         --extra-index-url https://flashinfer.ai/whl/cu$(echo $CUDA_VERSION | cut -d. -f1,2 | tr -d '.') \
     && flashinfer show-config
 
@@ -669,6 +703,8 @@ ARG PYTORCH_NIGHTLY
 # Install vLLM wheel first, so that torch etc will be installed.
 # Check whether to install torch nightly instead of release for this build.
 COPY --from=base /workspace/torch_lib_versions.txt torch_lib_versions.txt
+ENV UV_DEFAULT_INDEX=https://pypi.tuna.tsinghua.edu.cn/simple
+
 RUN --mount=type=bind,from=build,src=/workspace/dist,target=/vllm-workspace/dist \
     --mount=type=cache,target=/root/.cache/uv \
     if [ "${PYTORCH_NIGHTLY}" = "1" ]; then \
@@ -681,7 +717,7 @@ RUN --mount=type=bind,from=build,src=/workspace/dist,target=/vllm-workspace/dist
     else \
         echo "Installing vLLM..." \
         && uv pip install --system dist/*.whl --verbose \
-        --extra-index-url ${PYTORCH_CUDA_INDEX_BASE_URL}/cu$(echo $CUDA_VERSION | cut -d. -f1,2 | tr -d '.'); \
+        --extra-index-url https://mirrors.aliyun.com/pytorch-wheels/cu$(echo $CUDA_VERSION | cut -d. -f1,2 | tr -d '.'); \
     fi
 
 RUN --mount=type=cache,target=/root/.cache/uv \

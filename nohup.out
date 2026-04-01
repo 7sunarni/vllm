@@ -1,0 +1,14 @@
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 26.26kB 0.0s done
+#1 DONE 0.1s
+Dockerfile:90
+--------------------
+  88 |     RUN cat > /etc/apt/sources.list << eof
+  89 |     # 22.04
+  90 | >>> deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy main restricted universe multiverse
+  91 |     deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-updates main restricted universe multiverse
+  92 |     deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-backports main restricted universe multiverse
+--------------------
+ERROR: failed to solve: dockerfile parse error on line 90: unknown instruction: deb
